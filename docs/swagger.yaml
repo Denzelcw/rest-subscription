@@ -1,0 +1,75 @@
+basePath: /
+definitions:
+  dto.CreateSubDTO:
+    properties:
+      end_date:
+        type: string
+      price:
+        minimum: 0
+        type: integer
+      service_name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    required:
+    - start_date
+    - user_id
+    type: object
+  handler.CreateResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  resp.ErrorResponse:
+    properties:
+      error:
+        type: string
+      status:
+        type: integer
+    type: object
+host: localhost:8080
+info:
+  contact: {}
+  description: This is a sample server celler server.
+  title: Swagger Example API
+  version: "1.0"
+paths:
+  /subscriptions:
+    post:
+      consumes:
+      - application/json
+      description: Добавляет новую подписку в систему.
+      parameters:
+      - description: Данные для создания подписки
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateSubDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Успешное создание подписки
+          schema:
+            $ref: '#/definitions/handler.CreateResponse'
+        "400":
+          description: 'Некорректный запрос" example({ "status": 400, "error": "Invalid
+            service_name" })'
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: 'Ошибка сервера" example({ "status": 500, "error": "Internal
+            Server Error" })'
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Добавить новую подписку
+      tags:
+      - Subscriptions
+swagger: "2.0"

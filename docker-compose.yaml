@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  migrate:
+    build:
+      context: .
+      network: host
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    container_name: task_server_migrate
+    command: ["/migrator"]
+    network_mode: host
+    working_dir: /app
+    restart: "no"
+
+  server:
+    build:
+      context: .
+      network: host
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    container_name: task_server_server
+    command: ["/subscriptions"]
+    network_mode: host
+    working_dir: /app
+    depends_on:
+      - migrate
+    restart: unless-stopped

@@ -20,14 +20,13 @@ type DeleteResponse struct {
 }
 
 // DeleteUserSubscriptionHandler godoc
-// @Summary      Удаление подписки пользователя
-// @Description  Удаляет подписку пользователя по ID
-// @Tags         subscriptions
-// @Param        id   path      int  true  "ID подписки"
+// @Summary      Delete user subscription
+// @Description  Deletes a user subscription by ID
+// @Param        id   path      int  true  "User subscription ID"
 // @Success      200  {object}  DeleteResponse
-// @Failure      400  {object}  resp.ErrorResponse "Неверный ID"
-// @Failure      404  {object}  resp.ErrorResponse "Подписка не найдена"
-// @Failure      500  {object}  resp.ErrorResponse "Ошибка удаления"
+// @Failure      400  {object}  resp.ErrorResponse "Invalid ID"
+// @Failure      404  {object}  resp.ErrorResponse "User ubscription not found"
+// @Failure      500  {object}  resp.ErrorResponse "Server error"
 // @Router       /subscriptions/{id} [delete]
 func (h *UserSubscriptionHandler) DeleteUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.DeleteUserSubscriptionHandler"

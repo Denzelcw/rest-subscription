@@ -11,6 +11,7 @@ import (
 	"task_manager/internal/lib/api/resp"
 	valid "task_manager/internal/lib/api/valid"
 	"task_manager/internal/lib/logger/sl"
+	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
@@ -23,14 +24,14 @@ type CreateResponse struct {
 
 // AddUserSubscriptionHandler godoc
 // @Summary Add user subscription
-// @Description Adding user subsctiption to db.
-// @Tags User subscriptions
+// @Description Adding user subscription to the database.
 // @Accept json
 // @Produce json
-// @Param request body dto.CreateUserSubDTO true "Данные для создания подписки"
-// @Success 201 {object} CreateResponse "Успешное создание подписки"
-// @Failure 400 {object} resp.ErrorResponse "Некорректный запрос"
-// @Failure 500 {object} resp.ErrorResponse "Ошибка сервера"
+// @Param request body dto.CreateUserSubDTO true "Data for creating a user subscription"
+// @Success 201 {object} CreateResponse "Subscription created successfully"
+// @Failure 400 {object} resp.ErrorResponse "Invalid request"
+// @Failure 409 {object} resp.ErrorResponse "User subscription already exists"
+// @Failure 500 {object} resp.ErrorResponse "Server error"
 // @Router /subscriptions [post]
 func (h *UserSubscriptionHandler) AddUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.AddUserSubscriptionHandler"
@@ -72,9 +73,12 @@ func (h *UserSubscriptionHandler) AddUserSubscriptionHandler(w http.ResponseWrit
 
 	id, err := h.service.Add(ctx, req)
 	if err != nil {
-		log.Error("failed to add user subscription", sl.Err(err))
-
-		resp.Error(w, "failed to add user subscription", http.StatusInternalServerError)
+		log.Info("user subscription already exists")
+		if errors.Is(err, storage.ErrUserSubExists) {
+			resp.Error(w, "user subscription already exists", http.StatusConflict)
+		} else {
+			resp.Error(w, "failed to add user subscription", http.StatusInternalServerError)
+		}
 		return
 	}
 

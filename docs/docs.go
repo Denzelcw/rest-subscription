@@ -17,21 +17,18 @@ const docTemplate = `{
     "paths": {
         "/subscriptions": {
             "get": {
-                "description": "Возвращает список подписок пользователя по его UUID",
+                "description": "Returns a list of a user's subscriptions by their UUID",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "subscriptions"
-                ],
-                "summary": "Получение списка подписок пользователя",
+                "summary": "Get list of user subscriptions",
                 "parameters": [
                     {
                         "type": "string",
-                        "description": "UUID пользователя",
+                        "description": "User UUID",
                         "name": "user_id",
                         "in": "query",
                         "required": true
@@ -48,19 +45,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Некорректный UUID или отсутствует параметр",
+                        "description": "Invalid UUID or missing parameter",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Пользователь не найден",
+                        "description": "User not found",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка получения списка подписок",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -68,20 +65,17 @@ const docTemplate = `{
                 }
             },
             "post": {
-                "description": "Adding user subsctiption to db.",
+                "description": "Adding user subscription to the database.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "User subscriptions"
-                ],
                 "summary": "Add user subscription",
                 "parameters": [
                     {
-                        "description": "Данные для создания подписки",
+                        "description": "Data for creating a user subscription",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -92,19 +86,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "201": {
-                        "description": "Успешное создание подписки",
+                        "description": "Subscription created successfully",
                         "schema": {
                             "$ref": "#/definitions/handler.CreateResponse"
                         }
                     },
                     "400": {
-                        "description": "Некорректный запрос",
+                        "description": "Invalid request",
+                        "schema": {
+                            "$ref": "#/definitions/resp.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "User subscription already exists",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка сервера",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -114,20 +114,17 @@ const docTemplate = `{
         },
         "/subscriptions/total_cost": {
             "get": {
-                "description": "Возвращает суммарную стоимость подписок пользователя за указанный период",
+                "description": "Returns the total cost of a user's subscriptions for the specified period",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "subscriptions"
-                ],
-                "summary": "Получение общей стоимости подписок",
+                "summary": "Get total user subscription cost",
                 "parameters": [
                     {
-                        "description": "Даты начала и окончания периода",
+                        "description": "Request data",
                         "name": "request",
                         "in": "body",
                         "required": true,
@@ -144,13 +141,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Некорректные даты или тело запроса",
+                        "description": "Invalid request",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка получения данных",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -160,15 +157,12 @@ const docTemplate = `{
         },
         "/subscriptions/{id}": {
             "get": {
-                "description": "Возвращает информацию о подписке пользователя по её ID",
-                "tags": [
-                    "subscriptions"
-                ],
-                "summary": "Получение подписки пользователя",
+                "description": "Returns information about a user's subscription by its ID",
+                "summary": "Get user subscription",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID подписки",
+                        "description": "Subscription ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -176,25 +170,25 @@ const docTemplate = `{
                 ],
                 "responses": {
                     "200": {
-                        "description": "OK",
+                        "description": "Request data",
                         "schema": {
                             "$ref": "#/definitions/domain.UserSubscription"
                         }
                     },
                     "400": {
-                        "description": "Неверный ID",
+                        "description": "Invalid ID",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Подписка не найдена",
+                        "description": "User subscription not found",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка получения данных",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -202,28 +196,25 @@ const docTemplate = `{
                 }
             },
             "put": {
-                "description": "Обновляет данные подписки пользователя по её ID",
+                "description": "Updates a user's subscription data by its ID",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "subscriptions"
-                ],
-                "summary": "Обновление подписки пользователя",
+                "summary": "Update user subscription",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID подписки",
+                        "description": "Subscription ID",
                         "name": "id",
                         "in": "path",
                         "required": true
                     },
                     {
-                        "description": "Данные для обновления подписки",
-                        "name": "body",
+                        "description": "Data for updating the subscription",
+                        "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
@@ -239,13 +230,13 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Некорректный ID или тело запроса",
+                        "description": "Invalid ID or request body",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка при обновлении подписки",
+                        "description": "Error updating subscription",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -253,15 +244,12 @@ const docTemplate = `{
                 }
             },
             "delete": {
-                "description": "Удаляет подписку пользователя по ID",
-                "tags": [
-                    "subscriptions"
-                ],
-                "summary": "Удаление подписки пользователя",
+                "description": "Deletes a user subscription by ID",
+                "summary": "Delete user subscription",
                 "parameters": [
                     {
                         "type": "integer",
-                        "description": "ID подписки",
+                        "description": "User subscription ID",
                         "name": "id",
                         "in": "path",
                         "required": true
@@ -275,19 +263,19 @@ const docTemplate = `{
                         }
                     },
                     "400": {
-                        "description": "Неверный ID",
+                        "description": "Invalid ID",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "404": {
-                        "description": "Подписка не найдена",
+                        "description": "User ubscription not found",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
                     },
                     "500": {
-                        "description": "Ошибка удаления",
+                        "description": "Server error",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -450,8 +438,8 @@ var SwaggerInfo = &swag.Spec{
 	Host:             "localhost:8080",
 	BasePath:         "/",
 	Schemes:          []string{},
-	Title:            "Swagger Example API",
-	Description:      "This is a sample server celler server.",
+	Title:            "User Subscription REST API Server",
+	Description:      "This is a sample REST API server.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",

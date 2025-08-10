@@ -21,15 +21,14 @@ type TotalCostResponse struct {
 }
 
 // GetTotalCostHandler godoc
-// @Summary      Получение общей стоимости подписок
-// @Description  Возвращает суммарную стоимость подписок пользователя за указанный период
-// @Tags         subscriptions
+// @Summary      Get total user subscription cost
+// @Description  Returns the total cost of a user's subscriptions for the specified period
 // @Accept       json
 // @Produce      json
-// @Param        request body dto.TotalCost true "Даты начала и окончания периода"
+// @Param        request body dto.TotalCost true "Request data"
 // @Success      200 {object} TotalCostResponse
-// @Failure      400 {object} resp.ErrorResponse "Некорректные даты или тело запроса"
-// @Failure      500 {object} resp.ErrorResponse "Ошибка получения данных"
+// @Failure      400 {object} resp.ErrorResponse "Invalid request"
+// @Failure      500 {object} resp.ErrorResponse "Server error"
 // @Router       /subscriptions/total_cost [get]
 func (h *UserSubscriptionHandler) GetTotalCostHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.GetTotalCostHandler"

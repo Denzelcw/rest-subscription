@@ -15,14 +15,13 @@ import (
 )
 
 // GetUserSubscriptionHandler godoc
-// @Summary      Получение подписки пользователя
-// @Description  Возвращает информацию о подписке пользователя по её ID
-// @Tags         subscriptions
-// @Param        id   path      int  true  "ID подписки"
-// @Success      200  {object}  domain.UserSubscription
-// @Failure      400  {object}  resp.ErrorResponse "Неверный ID"
-// @Failure      404  {object}  resp.ErrorResponse "Подписка не найдена"
-// @Failure      500  {object}  resp.ErrorResponse "Ошибка получения данных"
+// @Summary      Get user subscription
+// @Description  Returns information about a user's subscription by its ID
+// @Param        id   path      int  true  "Subscription ID"
+// @Success      200  {object}  domain.UserSubscription "Request data"
+// @Failure      400  {object}  resp.ErrorResponse "Invalid ID"
+// @Failure      404  {object}  resp.ErrorResponse "User subscription not found"
+// @Failure      500  {object}  resp.ErrorResponse "Server error"
 // @Router       /subscriptions/{id} [get]
 func (h *UserSubscriptionHandler) GetUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.GetUserSubscriptionHandler"

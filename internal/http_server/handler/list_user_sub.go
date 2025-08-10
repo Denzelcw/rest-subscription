@@ -14,16 +14,15 @@ import (
 )
 
 // GetListUserSubscriptionHandler godoc
-// @Summary      Получение списка подписок пользователя
-// @Description  Возвращает список подписок пользователя по его UUID
-// @Tags         subscriptions
+// @Summary      Get list of user subscriptions
+// @Description  Returns a list of a user's subscriptions by their UUID
 // @Accept       json
 // @Produce      json
-// @Param        user_id query     string true "UUID пользователя"
+// @Param        user_id query     string true "User UUID"
 // @Success      200 {array}  domain.UserSubscription
-// @Failure      400 {object} resp.ErrorResponse "Некорректный UUID или отсутствует параметр"
-// @Failure      404 {object} resp.ErrorResponse "Пользователь не найден"
-// @Failure      500 {object} resp.ErrorResponse "Ошибка получения списка подписок"
+// @Failure      400 {object} resp.ErrorResponse "Invalid UUID or missing parameter"
+// @Failure      404 {object} resp.ErrorResponse "User not found"
+// @Failure      500 {object} resp.ErrorResponse "Server error"
 // @Router       /subscriptions [get]
 func (h *UserSubscriptionHandler) GetListUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.GetUserSubscriptionHandler"

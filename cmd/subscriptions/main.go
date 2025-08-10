@@ -10,9 +10,9 @@ import (
 	"task_manager/internal/config"
 )
 
-// @title           Swagger Example API
+// @title           User Subscription REST API Server
 // @version         1.0
-// @description     This is a sample server celler server.
+// @description     This is a sample REST API server.
 
 // @host      localhost:8080
 // @BasePath  /

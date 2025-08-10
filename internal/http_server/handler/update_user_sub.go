@@ -7,28 +7,26 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"strconv"
 	"task_manager/internal/http_server/dto"
 	"task_manager/internal/lib/api/resp"
 	valid "task_manager/internal/lib/api/valid"
 	"task_manager/internal/lib/logger/sl"
+	"task_manager/internal/storage"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
 )
 
 // UpdateSubscriptionHandler godoc
-// @Summary      Обновление подписки пользователя
-// @Description  Обновляет данные подписки пользователя по её ID
-// @Tags         subscriptions
+// @Summary      Update user subscription
+// @Description  Updates a user's subscription data by its ID
 // @Accept       json
 // @Produce      json
-// @Param        id   path      int                  true  "ID подписки"
-// @Param        body body      dto.UpdateUserSubDTO true  "Данные для обновления подписки"
+// @Param        id   path      int  true  "Subscription ID"
+// @Param        request body      dto.UpdateUserSubDTO true  "Data for updating the subscription"
 // @Success      201  {object}  domain.UserSubscription
-// @Failure      400  {object}  resp.ErrorResponse "Некорректный ID или тело запроса"
-// @Failure      500  {object}  resp.ErrorResponse "Ошибка при обновлении подписки"
+// @Failure      400  {object}  resp.ErrorResponse "Invalid ID or request body"
+// @Failure      500  {object}  resp.ErrorResponse "Error updating subscription"
 // @Router       /subscriptions/{id} [put]
 func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.AddUserSubscriptionHandler"
@@ -43,16 +41,6 @@ func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWrite
 
 	var req dto.UpdateUserSubDTO
 
-	idStr := chi.URLParam(r, "id")
-	id, err := strconv.Atoi(idStr)
-	if err != nil {
-		log.Error("failed to parse id", sl.Err(err))
-
-		resp.Error(w, "invalid subscription ID", http.StatusBadRequest)
-		return
-	}
-	req.ID = id
-
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error("failed to decode request", sl.Err(err))
 
@@ -60,7 +48,7 @@ func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWrite
 		return
 	}
 
-	err = valid.ValidateDates(req.StartDate, req.EndDate)
+	err := valid.ValidateDates(req.StartDate, req.EndDate)
 	if err != nil {
 		log.Error("invalid request body", sl.Err(err))
 
@@ -81,8 +69,11 @@ func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWrite
 	sub, err := h.service.UpdateById(ctx, req)
 	if err != nil {
 		log.Error("failed to update subscription", sl.Err(err))
-
-		resp.Error(w, "failed to update subscription", http.StatusInternalServerError)
+		if errors.Is(err, storage.ErrUserNotFound) {
+			resp.Error(w, "user not found", http.StatusNotFound)
+		} else {
+			resp.Error(w, "failed to update subscription", http.StatusInternalServerError)
+		}
 		return
 	}
 

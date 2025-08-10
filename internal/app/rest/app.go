@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -44,7 +45,7 @@ func New(cfg *config.Config, log *slog.Logger) *App {
 	router.Get("/subscriptions/{id}", subscriptionHandler.GetUserSubscriptionHandler)
 	router.Get("/subscriptions", subscriptionHandler.GetListUserSubscriptionHandler)
 	router.Delete("/subscriptions/{id}", subscriptionHandler.DeleteUserSubscriptionHandler)
-	router.Put("/subscriptions/{id}", subscriptionHandler.UpdateSubscriptionHandler)
+	router.Put("/subscriptions", subscriptionHandler.UpdateSubscriptionHandler)
 	router.Get("/subscriptions/total_cost", subscriptionHandler.GetTotalCostHandler)
 
 	router.Get("/swagger/*", httpSwagger.Handler(
@@ -73,7 +74,9 @@ func (a *App) MustRun() {
 }
 
 func (a *App) Run() error {
-	a.log.Info("starting server", slog.String("address", a.cfg.Address))
+	url := fmt.Sprintf("http://%s/swagger/index.html", a.cfg.Address)
+	a.log.Info("starting server", slog.String("url", url))
+
 	if err := a.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 		a.log.Error("server error", slog.Any("err", err))
 		return err

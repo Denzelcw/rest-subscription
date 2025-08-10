@@ -14,23 +14,18 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
-type DeleteResponse struct {
-	Id      int    `json:"id"`
-	Message string `json:"message"`
-}
-
-// DeleteUserSubscriptionHandler godoc
-// @Summary      Удаление подписки пользователя
-// @Description  Удаляет подписку пользователя по ID
+// GetUserSubscriptionHandler godoc
+// @Summary      Получение подписки пользователя
+// @Description  Возвращает информацию о подписке пользователя по её ID
 // @Tags         subscriptions
 // @Param        id   path      int  true  "ID подписки"
-// @Success      200  {object}  DeleteResponse
+// @Success      200  {object}  domain.UserSubscription
 // @Failure      400  {object}  resp.ErrorResponse "Неверный ID"
 // @Failure      404  {object}  resp.ErrorResponse "Подписка не найдена"
-// @Failure      500  {object}  resp.ErrorResponse "Ошибка удаления"
-// @Router       /subscriptions/{id} [delete]
-func (h *UserSubscriptionHandler) DeleteUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
-	const op = "handler.DeleteUserSubscriptionHandler"
+// @Failure      500  {object}  resp.ErrorResponse "Ошибка получения данных"
+// @Router       /subscriptions/{id} [get]
+func (h *UserSubscriptionHandler) GetUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handler.GetUserSubscriptionHandler"
 
 	ctx, cancel := context.WithTimeout(r.Context(), h.timeOut)
 	defer cancel()
@@ -49,21 +44,16 @@ func (h *UserSubscriptionHandler) DeleteUserSubscriptionHandler(w http.ResponseW
 		return
 	}
 
-	err = h.service.DeleteById(ctx, id)
+	subscription, err := h.service.GetById(ctx, id)
 	if err != nil {
-		log.Error("failed to delete user subscription", sl.Err(err))
+		log.Error("failed to get user subscription", sl.Err(err))
 		if errors.Is(err, storage.ErrNotFound) {
 			resp.Error(w, "user subscription not found", http.StatusNotFound)
 		} else {
-			resp.Error(w, "failed to delete user subscription", http.StatusInternalServerError)
+			resp.Error(w, "failed to get user subscription", http.StatusInternalServerError)
 		}
 		return
 	}
 
-	response := DeleteResponse{
-		Id:      id,
-		Message: "user subscription successfully deleted",
-	}
-
-	resp.ResponseOk(w, response, http.StatusOK)
+	resp.ResponseOk(w, subscription, http.StatusOK)
 }

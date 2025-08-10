@@ -4,7 +4,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Subscription struct {
+type UserSubscription struct {
 	ID          string    `json:"id,omitempty"`
 	ServiceName string    `json:"service_name,omitempty"`
 	Price       int       `json:"price,omitempty"`

@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -32,38 +33,49 @@ func New(dbConfig config.DbConfig) (*Storage, error) {
 	return &Storage{DB: db}, nil
 }
 
-func (s *Storage) AddSubscription(dto dto.CreateSubDTO) (int64, error) {
-	const op = "storage.postgres.AddSubscription"
+func (s *Storage) AddUserSubscription(ctx context.Context, dto dto.CreateUserSubDTO) (int64, error) {
+	const op = "storage.postgres.AddUserSubscription"
 
-	stmt, err := s.DB.Prepare(
-		"INSERT INTO user_subscriptions(service_name, price, user_id, start_date, end_date) VALUES($1, $2, $3, $4, $5) RETURNING id;")
-	if err != nil {
-		return 0, fmt.Errorf("%s: %w", op, err)
-	}
+	const query = `
+		INSERT INTO user_subscriptions (
+			service_name,
+			price,
+			user_id,
+			start_date,
+			end_date
+		)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id
+	`
 
-	var id int64
 	startDate, err := time.Parse("01-2006", dto.StartDate)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 
-	var endDate time.Time
 	var endDatePtr *time.Time
 	if dto.EndDate != "" {
-		endDate, err = time.Parse("01-2006", dto.EndDate)
+		endDate, err := time.Parse("01-2006", dto.EndDate)
 		if err != nil {
 			return 0, fmt.Errorf("%s: %w", op, err)
 		}
 		endDatePtr = &endDate
 	}
 
-	err = stmt.QueryRow(dto.ServiceName, dto.Price, dto.UserID, startDate, endDatePtr).Scan(&id)
+	var id int64
+	err = s.DB.QueryRowContext(
+		ctx,
+		query,
+		dto.ServiceName,
+		dto.Price,
+		dto.UserID,
+		startDate,
+		endDatePtr,
+	).Scan(&id)
 	if err != nil {
 		var pgErr *pq.Error
-		if errors.As(err, &pgErr) {
-			if pgErr.Code == "23505" {
-				return 0, fmt.Errorf("%s: %w", op, storage.ErrUrlExists)
-			}
+		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
+			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserSubExists)
 		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -71,18 +83,32 @@ func (s *Storage) AddSubscription(dto dto.CreateSubDTO) (int64, error) {
 	return id, nil
 }
 
-func (s *Storage) GetSubscriptionById(id int) (*domain.Subscription, error) {
-	const op = "storage.postgresql.GetSubscriptionById"
+func (s *Storage) GetUserSubscriptionById(ctx context.Context, id int) (*domain.UserSubscription, error) {
+	const op = "storage.postgresql.GetUserSubscriptionById"
 
-	stmt, err := s.DB.Prepare("SELECT id, service_name, price, user_id, TO_CHAR(start_date, 'MM-YYYY') AS start_date, TO_CHAR(end_date, 'MM-YYYY') AS end_date FROM user_subscriptions WHERE id = $1")
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
+	const query = `
+		SELECT 
+			id,
+			service_name,
+			price,
+			user_id,
+			TO_CHAR(start_date, 'MM-YYYY') AS start_date,
+			TO_CHAR(end_date, 'MM-YYYY')   AS end_date
+		FROM user_subscriptions
+		WHERE id = $1
+	`
 
-	var sub domain.Subscription
+	var sub domain.UserSubscription
 	var endDate sql.NullString
 
-	err = stmt.QueryRow(id).Scan(&sub.ID, &sub.ServiceName, &sub.Price, &sub.UserID, &sub.StartDate, &endDate)
+	err := s.DB.QueryRowContext(ctx, query, id).Scan(
+		&sub.ID,
+		&sub.ServiceName,
+		&sub.Price,
+		&sub.UserID,
+		&sub.StartDate,
+		&endDate,
+	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
@@ -92,56 +118,46 @@ func (s *Storage) GetSubscriptionById(id int) (*domain.Subscription, error) {
 
 	if endDate.Valid {
 		sub.EndDate = endDate.String
-	} else {
-		sub.EndDate = ""
 	}
 
 	return &sub, nil
 }
 
-func (s *Storage) GetSubscriptionsListByUUID(userID uuid.UUID) ([]*domain.Subscription, error) {
-	const op = "storage.postgresql.GetSubscriptionsListByUUID"
+func (s *Storage) GetUserSubscriptionsListByUUID(ctx context.Context, userID uuid.UUID) ([]*domain.UserSubscription, error) {
+	const op = "storage.postgresql.GetUserSubscriptionsListByUUID"
 
-	stmt, err := s.DB.Prepare(`
-  SELECT
-   id,
-   service_name,
-   price,
-   user_id,
-   TO_CHAR(start_date, 'MM-YYYY') AS start_date,
-   TO_CHAR(end_date, 'MM-YYYY') AS end_date
-  FROM
-   user_subscriptions
-  WHERE
-   user_id = $1
- `)
+	const query = `
+		SELECT
+			id,
+			service_name,
+			price,
+			user_id,
+			TO_CHAR(start_date, 'MM-YYYY') AS start_date,
+			TO_CHAR(end_date, 'MM-YYYY') AS end_date
+		FROM user_subscriptions
+		WHERE user_id = $1
+	`
+
+	rows, err := s.DB.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+	defer rows.Close()
 
-	rows, err := stmt.Query(userID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, storage.ErrNotFound
-		}
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-
-	var subscriptions []*domain.Subscription
+	var subscriptions []*domain.UserSubscription
 
 	for rows.Next() {
-		var sub domain.Subscription
+		var sub domain.UserSubscription
 		var endDate sql.NullString
 
-		err = rows.Scan(
+		if err := rows.Scan(
 			&sub.ID,
 			&sub.ServiceName,
 			&sub.Price,
 			&sub.UserID,
 			&sub.StartDate,
 			&endDate,
-		)
-		if err != nil {
+		); err != nil {
 			return nil, fmt.Errorf("%s: %w", op, err)
 		}
 
@@ -165,15 +181,15 @@ func (s *Storage) GetSubscriptionsListByUUID(userID uuid.UUID) ([]*domain.Subscr
 	return subscriptions, nil
 }
 
-func (s *Storage) DeleteSubscriptionByID(id int) error {
-	const op = "storage.postgresql.DeleteSubscriptionByID"
+func (s *Storage) DeleteUserSubscriptionByID(ctx context.Context, id int) error {
+	const op = "storage.postgresql.DeleteUserSubscriptionByID"
 
 	stmt, err := s.DB.Prepare("DELETE FROM user_subscriptions WHERE id = $1")
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
 
-	result, err := stmt.Exec(id)
+	result, err := stmt.ExecContext(ctx, id)
 	if err != nil {
 		return fmt.Errorf("%s: %w", op, err)
 	}
@@ -190,30 +206,45 @@ func (s *Storage) DeleteSubscriptionByID(id int) error {
 	return nil
 }
 
-func (s *Storage) UpdateSubscription(dto dto.UpdateSubDTO) (*domain.Subscription, error) {
-	const op = "storage.postgres.UpdateSubscription"
+func (s *Storage) UpdateUserSubscription(ctx context.Context, dto dto.UpdateUserSubDTO) (*domain.UserSubscription, error) {
+	const op = "storage.postgres.UpdateUserSubscription"
 
-	stmt, err := s.DB.Prepare(`
-	  UPDATE user_subscriptions
-	  SET service_name = $2,
-	   price = $3,
-	   user_id = $4,
-	   start_date = $5,
-	   end_date = $6,
-	   updated_at = NOW()
-	  WHERE id = $1
-	  RETURNING id, service_name, price, user_id, TO_CHAR(start_date, 'MM-YYYY') AS start_date, TO_CHAR(end_date, 'MM-YYYY') AS end_date;
- 	`)
-	if err != nil {
-		return nil, fmt.Errorf("%s: %w", op, err)
-	}
-	defer stmt.Close()
+	const query = `
+		UPDATE user_subscriptions
+		SET
+			service_name = $2,
+			price = $3,
+			user_id = $4,
+			start_date = $5,
+			end_date = $6,
+			updated_at = NOW()
+		WHERE id = $1
+		RETURNING
+			id,
+			service_name,
+			price,
+			user_id,
+			TO_CHAR(start_date, 'MM-YYYY') AS start_date,
+			TO_CHAR(end_date, 'MM-YYYY') AS end_date
+	`
 
 	startDate, endDate, err := parseDates(dto.StartDate, dto.EndDate, op)
+	if err != nil {
+		return nil, err
+	}
 
-	var sub domain.Subscription
+	var sub domain.UserSubscription
 
-	err = stmt.QueryRow(dto.ID, dto.ServiceName, dto.Price, dto.UserID, startDate, endDate).Scan(
+	err = s.DB.QueryRowContext(
+		ctx,
+		query,
+		dto.ID,
+		dto.ServiceName,
+		dto.Price,
+		dto.UserID,
+		startDate,
+		endDate,
+	).Scan(
 		&sub.ID,
 		&sub.ServiceName,
 		&sub.Price,
@@ -221,34 +252,42 @@ func (s *Storage) UpdateSubscription(dto dto.UpdateSubDTO) (*domain.Subscription
 		&sub.StartDate,
 		&sub.EndDate,
 	)
-
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
+
 	return &sub, nil
 }
 
-func (s *Storage) CalculateTotalCost(dto dto.TotalCost) (int64, error) {
-	const op = "handler.CalculateTotalCost"
-	query := `
+func (s *Storage) CalculateTotalCost(ctx context.Context, dto dto.TotalCost) (int64, error) {
+	const op = "storage.postgres.CalculateTotalCost"
+
+	const query = `
 		SELECT COALESCE(SUM(price), 0)
 		FROM user_subscriptions
 		WHERE user_id = $1
-		AND service_name = $2
-		AND start_date >= $3
-		AND end_date <= $4
- 	`
+		  AND service_name = $2
+		  AND start_date >= $3
+		  AND end_date <= $4
+	`
 
 	startDate, endDate, err := parseDates(dto.StartDate, dto.EndDate, op)
-
-	row := s.DB.QueryRow(query, dto.UserID, dto.ServiceName, startDate, endDate)
+	if err != nil {
+		return 0, err
+	}
 
 	var totalCost int64
-
-	err = row.Scan(&totalCost)
+	err = s.DB.QueryRowContext(
+		ctx,
+		query,
+		dto.UserID,
+		dto.ServiceName,
+		startDate,
+		endDate,
+	).Scan(&totalCost)
 	if err != nil {
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}

@@ -1,9 +1,61 @@
 basePath: /
 definitions:
-  dto.CreateSubDTO:
+  domain.UserSubscription:
     properties:
       end_date:
         type: string
+      id:
+        type: string
+      price:
+        type: integer
+      service_name:
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    type: object
+  dto.CreateUserSubDTO:
+    properties:
+      end_date:
+        type: string
+      price:
+        minimum: 0
+        type: integer
+      service_name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    required:
+    - start_date
+    - user_id
+    type: object
+  dto.TotalCost:
+    properties:
+      end_date:
+        type: string
+      service_name:
+        maxLength: 255
+        minLength: 3
+        type: string
+      start_date:
+        type: string
+      user_id:
+        type: string
+    required:
+    - start_date
+    - user_id
+    type: object
+  dto.UpdateUserSubDTO:
+    properties:
+      end_date:
+        type: string
+      id:
+        type: integer
       price:
         minimum: 0
         type: integer
@@ -26,6 +78,18 @@ definitions:
       message:
         type: string
     type: object
+  handler.DeleteResponse:
+    properties:
+      id:
+        type: integer
+      message:
+        type: string
+    type: object
+  handler.TotalCostResponse:
+    properties:
+      total_cost:
+        type: integer
+    type: object
   resp.ErrorResponse:
     properties:
       error:
@@ -41,17 +105,51 @@ info:
   version: "1.0"
 paths:
   /subscriptions:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает список подписок пользователя по его UUID
+      parameters:
+      - description: UUID пользователя
+        in: query
+        name: user_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/domain.UserSubscription'
+            type: array
+        "400":
+          description: Некорректный UUID или отсутствует параметр
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "404":
+          description: Пользователь не найден
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: Ошибка получения списка подписок
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Получение списка подписок пользователя
+      tags:
+      - subscriptions
     post:
       consumes:
       - application/json
-      description: Добавляет новую подписку в систему.
+      description: Adding user subsctiption to db.
       parameters:
       - description: Данные для создания подписки
         in: body
         name: request
         required: true
         schema:
-          $ref: '#/definitions/dto.CreateSubDTO'
+          $ref: '#/definitions/dto.CreateUserSubDTO'
       produces:
       - application/json
       responses:
@@ -60,16 +158,136 @@ paths:
           schema:
             $ref: '#/definitions/handler.CreateResponse'
         "400":
-          description: 'Некорректный запрос" example({ "status": 400, "error": "Invalid
-            service_name" })'
+          description: Некорректный запрос
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
         "500":
-          description: 'Ошибка сервера" example({ "status": 500, "error": "Internal
-            Server Error" })'
+          description: Ошибка сервера
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
-      summary: Добавить новую подписку
+      summary: Add user subscription
       tags:
-      - Subscriptions
+      - User subscriptions
+  /subscriptions/{id}:
+    delete:
+      description: Удаляет подписку пользователя по ID
+      parameters:
+      - description: ID подписки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.DeleteResponse'
+        "400":
+          description: Неверный ID
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "404":
+          description: Подписка не найдена
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: Ошибка удаления
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Удаление подписки пользователя
+      tags:
+      - subscriptions
+    get:
+      description: Возвращает информацию о подписке пользователя по её ID
+      parameters:
+      - description: ID подписки
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/domain.UserSubscription'
+        "400":
+          description: Неверный ID
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "404":
+          description: Подписка не найдена
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: Ошибка получения данных
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Получение подписки пользователя
+      tags:
+      - subscriptions
+    put:
+      consumes:
+      - application/json
+      description: Обновляет данные подписки пользователя по её ID
+      parameters:
+      - description: ID подписки
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Данные для обновления подписки
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/dto.UpdateUserSubDTO'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/domain.UserSubscription'
+        "400":
+          description: Некорректный ID или тело запроса
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: Ошибка при обновлении подписки
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Обновление подписки пользователя
+      tags:
+      - subscriptions
+  /subscriptions/total_cost:
+    get:
+      consumes:
+      - application/json
+      description: Возвращает суммарную стоимость подписок пользователя за указанный
+        период
+      parameters:
+      - description: Даты начала и окончания периода
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/dto.TotalCost'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/handler.TotalCostResponse'
+        "400":
+          description: Некорректные даты или тело запроса
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+        "500":
+          description: Ошибка получения данных
+          schema:
+            $ref: '#/definitions/resp.ErrorResponse'
+      summary: Получение общей стоимости подписок
+      tags:
+      - subscriptions
 swagger: "2.0"

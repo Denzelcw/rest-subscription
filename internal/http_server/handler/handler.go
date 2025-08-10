@@ -1,28 +1,35 @@
 package handler
 
 import (
+	"context"
 	"log/slog"
 	"task_manager/internal/domain"
 	"task_manager/internal/http_server/dto"
 	"task_manager/internal/usecases"
+	"time"
 
 	"github.com/google/uuid"
 )
 
-type SubUseCases interface {
-	Add(dto dto.CreateSubDTO) (int64, error)
-	GetById(id int) (*domain.Subscription, error)
-	GetListByUUID(userId uuid.UUID) ([]*domain.Subscription, error)
-	DeleteById(id int) error
-	UpdateById(dto dto.UpdateSubDTO) (*domain.Subscription, error)
-	TotalCost(cost dto.TotalCost) (int64, error)
+type UserSubUseCases interface {
+	Add(ctx context.Context, dto dto.CreateUserSubDTO) (int64, error)
+	GetById(ctx context.Context, id int) (*domain.UserSubscription, error)
+	GetListByUUID(ctx context.Context, userId uuid.UUID) ([]*domain.UserSubscription, error)
+	DeleteById(ctx context.Context, id int) error
+	UpdateById(ctx context.Context, dto dto.UpdateUserSubDTO) (*domain.UserSubscription, error)
+	TotalCost(ctx context.Context, cost dto.TotalCost) (int64, error)
 }
 
-type SubscriptionHandler struct {
+type UserSubscriptionHandler struct {
 	log     *slog.Logger
-	service SubUseCases
+	service UserSubUseCases
+	timeOut time.Duration
 }
 
-func NewSubscriptionHandler(service *usecases.SubscriptionService, l *slog.Logger) *SubscriptionHandler {
-	return &SubscriptionHandler{service: service, log: l}
+func NewUserSubscriptionHandler(
+	service *usecases.UserSubscriptionService,
+	l *slog.Logger,
+	timeOut time.Duration,
+) *UserSubscriptionHandler {
+	return &UserSubscriptionHandler{service: service, log: l, timeOut: timeOut}
 }

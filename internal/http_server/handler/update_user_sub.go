@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -15,26 +16,32 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
-	"github.com/google/uuid"
 )
 
-type UpdateResponse struct {
-	ServiceName string    `json:"service_name"`
-	Price       int       `json:"price"`
-	UserID      uuid.UUID `json:"user_id"`
-	StartDate   string    `json:"start_date"`
-	EndDate     string    `json:"end_date"`
-}
+// UpdateSubscriptionHandler godoc
+// @Summary      Обновление подписки пользователя
+// @Description  Обновляет данные подписки пользователя по её ID
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        id   path      int                  true  "ID подписки"
+// @Param        body body      dto.UpdateUserSubDTO true  "Данные для обновления подписки"
+// @Success      201  {object}  domain.UserSubscription
+// @Failure      400  {object}  resp.ErrorResponse "Некорректный ID или тело запроса"
+// @Failure      500  {object}  resp.ErrorResponse "Ошибка при обновлении подписки"
+// @Router       /subscriptions/{id} [put]
+func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handler.AddUserSubscriptionHandler"
 
-func (h *SubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
-	const op = "handler.AddSubscriptionHandler"
+	ctx, cancel := context.WithTimeout(r.Context(), h.timeOut)
+	defer cancel()
 
 	log := h.log.With(
 		slog.String("op", op),
 		slog.String("request_url", middleware.GetReqID(r.Context())),
 	)
 
-	var req dto.UpdateSubDTO
+	var req dto.UpdateUserSubDTO
 
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.Atoi(idStr)
@@ -71,7 +78,7 @@ func (h *SubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWriter, r
 		return
 	}
 
-	sub, err := h.service.UpdateById(req)
+	sub, err := h.service.UpdateById(ctx, req)
 	if err != nil {
 		log.Error("failed to update subscription", sl.Err(err))
 

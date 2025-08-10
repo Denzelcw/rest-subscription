@@ -31,7 +31,7 @@ func New(cfg *config.Config, log *slog.Logger) *App {
 	}
 
 	subscriptionService := usecases.NewSubscriptionService(storage, log)
-	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionService, log)
+	subscriptionHandler := handler.NewUserSubscriptionHandler(subscriptionService, log, cfg.HTTPServer.Timeout)
 
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
@@ -40,10 +40,10 @@ func New(cfg *config.Config, log *slog.Logger) *App {
 	router.Use(middleware.Recoverer)
 	router.Use(middleware.URLFormat)
 
-	router.Post("/subscriptions", subscriptionHandler.AddSubscriptionHandler)
-	router.Get("/subscriptions/{id}", subscriptionHandler.GetSubscriptionHandler)
-	router.Get("/subscriptions", subscriptionHandler.GetListSubscriptionHandler)
-	router.Delete("/subscriptions/{id}", subscriptionHandler.DeleteSubscriptionHandler)
+	router.Post("/subscriptions", subscriptionHandler.AddUserSubscriptionHandler)
+	router.Get("/subscriptions/{id}", subscriptionHandler.GetUserSubscriptionHandler)
+	router.Get("/subscriptions", subscriptionHandler.GetListUserSubscriptionHandler)
+	router.Delete("/subscriptions/{id}", subscriptionHandler.DeleteUserSubscriptionHandler)
 	router.Put("/subscriptions/{id}", subscriptionHandler.UpdateSubscriptionHandler)
 	router.Get("/subscriptions/total_cost", subscriptionHandler.GetTotalCostHandler)
 

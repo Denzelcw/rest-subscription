@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"errors"
 	"log/slog"
 	"net/http"
@@ -12,12 +13,27 @@ import (
 	"github.com/google/uuid"
 )
 
-func (h *SubscriptionHandler) GetListSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
-	const op = "handler.GetSubscriptionHandler"
+// GetListUserSubscriptionHandler godoc
+// @Summary      Получение списка подписок пользователя
+// @Description  Возвращает список подписок пользователя по его UUID
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        user_id query     string true "UUID пользователя"
+// @Success      200 {array}  domain.UserSubscription
+// @Failure      400 {object} resp.ErrorResponse "Некорректный UUID или отсутствует параметр"
+// @Failure      404 {object} resp.ErrorResponse "Пользователь не найден"
+// @Failure      500 {object} resp.ErrorResponse "Ошибка получения списка подписок"
+// @Router       /subscriptions [get]
+func (h *UserSubscriptionHandler) GetListUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handler.GetUserSubscriptionHandler"
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.timeOut)
+	defer cancel()
 
 	log := h.log.With(
 		slog.String("op", op),
-		slog.String("request_url", middleware.GetReqID(r.Context())),
+		slog.String("request_url", middleware.GetReqID(ctx)),
 	)
 
 	userIdStr := r.URL.Query().Get("user_id")
@@ -34,13 +50,13 @@ func (h *SubscriptionHandler) GetListSubscriptionHandler(w http.ResponseWriter, 
 		return
 	}
 
-	subs, err := h.service.GetListByUUID(userId)
+	subs, err := h.service.GetListByUUID(ctx, userId)
 	if err != nil {
-		log.Error("failed to get subscription", sl.Err(err))
+		log.Error("failed to get user subscriptions", sl.Err(err))
 		if errors.Is(err, storage.ErrUserNotFound) {
 			resp.Error(w, "user not found", http.StatusNotFound)
 		} else {
-			resp.Error(w, "failed to get subscriptions list", http.StatusInternalServerError)
+			resp.Error(w, "failed to get user subscriptions list", http.StatusInternalServerError)
 		}
 		return
 	}

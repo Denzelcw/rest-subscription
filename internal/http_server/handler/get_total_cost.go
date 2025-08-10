@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -19,12 +20,26 @@ type TotalCostResponse struct {
 	TotalCost int64 `json:"total_cost"`
 }
 
-func (h *SubscriptionHandler) GetTotalCostHandler(w http.ResponseWriter, r *http.Request) {
+// GetTotalCostHandler godoc
+// @Summary      Получение общей стоимости подписок
+// @Description  Возвращает суммарную стоимость подписок пользователя за указанный период
+// @Tags         subscriptions
+// @Accept       json
+// @Produce      json
+// @Param        request body dto.TotalCost true "Даты начала и окончания периода"
+// @Success      200 {object} TotalCostResponse
+// @Failure      400 {object} resp.ErrorResponse "Некорректные даты или тело запроса"
+// @Failure      500 {object} resp.ErrorResponse "Ошибка получения данных"
+// @Router       /subscriptions/total_cost [get]
+func (h *UserSubscriptionHandler) GetTotalCostHandler(w http.ResponseWriter, r *http.Request) {
 	const op = "handler.GetTotalCostHandler"
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.timeOut)
+	defer cancel()
 
 	log := h.log.With(
 		slog.String("op", op),
-		slog.String("request_url", middleware.GetReqID(r.Context())),
+		slog.String("request_url", middleware.GetReqID(ctx)),
 	)
 
 	var req dto.TotalCost
@@ -54,10 +69,10 @@ func (h *SubscriptionHandler) GetTotalCostHandler(w http.ResponseWriter, r *http
 		return
 	}
 
-	totalCost, err := h.service.TotalCost(req)
+	totalCost, err := h.service.TotalCost(ctx, req)
 	if err != nil {
 		log.Error("failed to get total cost", sl.Err(err))
-		resp.Error(w, "subscription not found", http.StatusInternalServerError)
+		resp.Error(w, "failed to get total cost", http.StatusInternalServerError)
 
 		return
 	}

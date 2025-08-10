@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -20,25 +21,29 @@ type CreateResponse struct {
 	Message string `json:"message"`
 }
 
-// @Summary Добавить новую подписку
-// @Description Добавляет новую подписку в систему.
-// @Tags Subscriptions
+// AddUserSubscriptionHandler godoc
+// @Summary Add user subscription
+// @Description Adding user subsctiption to db.
+// @Tags User subscriptions
 // @Accept json
 // @Produce json
-// @Param request body dto.CreateSubDTO true "Данные для создания подписки"
+// @Param request body dto.CreateUserSubDTO true "Данные для создания подписки"
 // @Success 201 {object} CreateResponse "Успешное создание подписки"
 // @Failure 400 {object} resp.ErrorResponse "Некорректный запрос"
 // @Failure 500 {object} resp.ErrorResponse "Ошибка сервера"
 // @Router /subscriptions [post]
-func (h *SubscriptionHandler) AddSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
-	const op = "handler.AddSubscriptionHandler"
+func (h *UserSubscriptionHandler) AddUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
+	const op = "handler.AddUserSubscriptionHandler"
+
+	ctx, cancel := context.WithTimeout(r.Context(), h.timeOut)
+	defer cancel()
 
 	log := h.log.With(
 		slog.String("op", op),
-		slog.String("request_url", middleware.GetReqID(r.Context())),
+		slog.String("request_url", middleware.GetReqID(ctx)),
 	)
 
-	var req dto.CreateSubDTO
+	var req dto.CreateUserSubDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		log.Error("failed to decode request", sl.Err(err))
@@ -65,15 +70,15 @@ func (h *SubscriptionHandler) AddSubscriptionHandler(w http.ResponseWriter, r *h
 		return
 	}
 
-	id, err := h.service.Add(req)
+	id, err := h.service.Add(ctx, req)
 	if err != nil {
-		log.Error("failed to add subscription", sl.Err(err))
+		log.Error("failed to add user subscription", sl.Err(err))
 
-		resp.Error(w, "failed to add subscription", http.StatusInternalServerError)
+		resp.Error(w, "failed to add user subscription", http.StatusInternalServerError)
 		return
 	}
 
-	response := CreateResponse{Id: id, Message: "Subscription created successfully"}
+	response := CreateResponse{Id: id, Message: "User subscription created successfully"}
 
 	resp.ResponseOk(w, response, http.StatusCreated)
 }

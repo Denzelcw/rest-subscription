@@ -2,13 +2,12 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -22,6 +21,7 @@ type DeleteResponse struct {
 // DeleteUserSubscriptionHandler godoc
 // @Summary      Delete user subscription
 // @Description  Deletes a user subscription by ID
+// @Tags Subscription
 // @Param        id   path      int  true  "User subscription ID"
 // @Success      200  {object}  DeleteResponse
 // @Failure      400  {object}  resp.ErrorResponse "Invalid ID"
@@ -50,12 +50,13 @@ func (h *UserSubscriptionHandler) DeleteUserSubscriptionHandler(w http.ResponseW
 
 	err = h.service.DeleteById(ctx, id)
 	if err != nil {
-		log.Error("failed to delete user subscription", sl.Err(err))
-		if errors.Is(err, storage.ErrNotFound) {
-			resp.Error(w, "user subscription not found", http.StatusNotFound)
-		} else {
-			resp.Error(w, "failed to delete user subscription", http.StatusInternalServerError)
+		log.Error("failed to delete user subscription")
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
 		}
+
+		resp.Error(w, "failed to delete user subscription", http.StatusInternalServerError)
 		return
 	}
 

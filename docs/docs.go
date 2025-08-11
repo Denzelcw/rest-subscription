@@ -24,6 +24,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Get list of user subscriptions",
                 "parameters": [
                     {
@@ -72,6 +75,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Add user subscription",
                 "parameters": [
                     {
@@ -98,7 +104,7 @@ const docTemplate = `{
                         }
                     },
                     "409": {
-                        "description": "User subscription already exists",
+                        "description": "User subscription conflicts with existing record",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -120,6 +126,9 @@ const docTemplate = `{
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Total Cost"
                 ],
                 "summary": "Get total user subscription cost",
                 "parameters": [
@@ -158,6 +167,9 @@ const docTemplate = `{
         "/subscriptions/{id}": {
             "get": {
                 "description": "Returns information about a user's subscription by its ID",
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Get user subscription",
                 "parameters": [
                     {
@@ -203,6 +215,9 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Update user subscription",
                 "parameters": [
                     {
@@ -245,6 +260,9 @@ const docTemplate = `{
             },
             "delete": {
                 "description": "Deletes a user subscription by ID",
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Delete user subscription",
                 "parameters": [
                     {

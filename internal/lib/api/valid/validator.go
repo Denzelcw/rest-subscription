@@ -20,7 +20,6 @@ func ValidateDates(startDateStr, endDateStr string) error {
 	if endDateStr == "" {
 		return nil
 	}
-	fmt.Println("endDateStr", endDateStr)
 	endDate, err := time.Parse(layout, endDateStr)
 	if err != nil {
 		return fmt.Errorf("invalid end_date format: %w", err)

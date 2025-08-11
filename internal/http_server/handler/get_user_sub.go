@@ -2,13 +2,12 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
 	"strconv"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -17,6 +16,7 @@ import (
 // GetUserSubscriptionHandler godoc
 // @Summary      Get user subscription
 // @Description  Returns information about a user's subscription by its ID
+// @Tags Subscription
 // @Param        id   path      int  true  "Subscription ID"
 // @Success      200  {object}  domain.UserSubscription "Request data"
 // @Failure      400  {object}  resp.ErrorResponse "Invalid ID"
@@ -46,11 +46,12 @@ func (h *UserSubscriptionHandler) GetUserSubscriptionHandler(w http.ResponseWrit
 	subscription, err := h.service.GetById(ctx, id)
 	if err != nil {
 		log.Error("failed to get user subscription", sl.Err(err))
-		if errors.Is(err, storage.ErrNotFound) {
-			resp.Error(w, "user subscription not found", http.StatusNotFound)
-		} else {
-			resp.Error(w, "failed to get user subscription", http.StatusInternalServerError)
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
 		}
+
+		resp.Error(w, "failed to get user subscription", http.StatusInternalServerError)
 		return
 	}
 

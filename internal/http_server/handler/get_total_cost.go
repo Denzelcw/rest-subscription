@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 	"task_manager/internal/http_server/dto"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	valid "task_manager/internal/lib/api/valid"
 	"task_manager/internal/lib/logger/sl"
@@ -23,6 +24,7 @@ type TotalCostResponse struct {
 // GetTotalCostHandler godoc
 // @Summary      Get total user subscription cost
 // @Description  Returns the total cost of a user's subscriptions for the specified period
+// @Tags Total Cost
 // @Accept       json
 // @Produce      json
 // @Param        request body dto.TotalCost true "Request data"
@@ -71,8 +73,12 @@ func (h *UserSubscriptionHandler) GetTotalCostHandler(w http.ResponseWriter, r *
 	totalCost, err := h.service.TotalCost(ctx, req)
 	if err != nil {
 		log.Error("failed to get total cost", sl.Err(err))
-		resp.Error(w, "failed to get total cost", http.StatusInternalServerError)
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
+		}
 
+		resp.Error(w, "failed to get total cost", http.StatusInternalServerError)
 		return
 	}
 

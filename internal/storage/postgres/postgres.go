@@ -15,6 +15,11 @@ import (
 	"github.com/lib/pq" // init postgres driver
 )
 
+const (
+	ErrExistsCode  = "23505"
+	ErrOverLapCode = "23P01"
+)
+
 type Storage struct {
 	DB *sql.DB
 }
@@ -74,8 +79,13 @@ func (s *Storage) AddUserSubscription(ctx context.Context, dto dto.CreateUserSub
 	).Scan(&id)
 	if err != nil {
 		var pgErr *pq.Error
-		if errors.As(err, &pgErr) && pgErr.Code == "23505" {
-			return 0, fmt.Errorf("%s: %w", op, storage.ErrUserSubExists)
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case ErrExistsCode:
+				return 0, fmt.Errorf("%s: %w", op, storage.ErrUserSubExists)
+			case ErrOverLapCode:
+				return 0, fmt.Errorf("%s: %w", op, storage.ErrOverlap)
+			}
 		}
 		return 0, fmt.Errorf("%s: %w", op, err)
 	}
@@ -256,9 +266,19 @@ func (s *Storage) UpdateUserSubscription(ctx context.Context, dto dto.UpdateUser
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, storage.ErrNotFound
 		}
+
+		var pgErr *pq.Error
+		if errors.As(err, &pgErr) {
+			switch pgErr.Code {
+			case ErrExistsCode:
+				return nil, fmt.Errorf("%s: %w", op, storage.ErrUserSubExists)
+			case ErrOverLapCode:
+				return nil, fmt.Errorf("%s: %w", op, storage.ErrOverlap)
+			}
+		}
+
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
-
 	return &sub, nil
 }
 

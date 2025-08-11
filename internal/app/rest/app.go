@@ -55,9 +55,9 @@ func New(cfg *config.Config, log *slog.Logger) *App {
 	srv := &http.Server{
 		Addr:         cfg.Address,
 		Handler:      router,
-		ReadTimeout:  cfg.HTTPServer.Timeout * time.Second,
-		WriteTimeout: cfg.HTTPServer.Timeout * time.Second,
-		IdleTimeout:  cfg.HTTPServer.IdleTimeout * time.Second,
+		ReadTimeout:  cfg.Timeout * time.Second,
+		WriteTimeout: cfg.Timeout * time.Second,
+		IdleTimeout:  cfg.IdleTimeout * time.Second,
 	}
 
 	return &App{

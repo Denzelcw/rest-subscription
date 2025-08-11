@@ -18,6 +18,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Get list of user subscriptions",
                 "parameters": [
                     {
@@ -66,6 +69,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Add user subscription",
                 "parameters": [
                     {
@@ -92,7 +98,7 @@
                         }
                     },
                     "409": {
-                        "description": "User subscription already exists",
+                        "description": "User subscription conflicts with existing record",
                         "schema": {
                             "$ref": "#/definitions/resp.ErrorResponse"
                         }
@@ -114,6 +120,9 @@
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Total Cost"
                 ],
                 "summary": "Get total user subscription cost",
                 "parameters": [
@@ -152,6 +161,9 @@
         "/subscriptions/{id}": {
             "get": {
                 "description": "Returns information about a user's subscription by its ID",
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Get user subscription",
                 "parameters": [
                     {
@@ -197,6 +209,9 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Update user subscription",
                 "parameters": [
                     {
@@ -239,6 +254,9 @@
             },
             "delete": {
                 "description": "Deletes a user subscription by ID",
+                "tags": [
+                    "Subscription"
+                ],
                 "summary": "Delete user subscription",
                 "parameters": [
                     {

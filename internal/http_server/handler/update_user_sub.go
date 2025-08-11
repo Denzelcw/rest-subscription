@@ -8,10 +8,10 @@ import (
 	"log/slog"
 	"net/http"
 	"task_manager/internal/http_server/dto"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	valid "task_manager/internal/lib/api/valid"
 	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
@@ -20,6 +20,7 @@ import (
 // UpdateSubscriptionHandler godoc
 // @Summary      Update user subscription
 // @Description  Updates a user's subscription data by its ID
+// @Tags Subscription
 // @Accept       json
 // @Produce      json
 // @Param        id   path      int  true  "Subscription ID"
@@ -68,12 +69,12 @@ func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWrite
 
 	sub, err := h.service.UpdateById(ctx, req)
 	if err != nil {
-		log.Error("failed to update subscription", sl.Err(err))
-		if errors.Is(err, storage.ErrUserNotFound) {
-			resp.Error(w, "user not found", http.StatusNotFound)
-		} else {
-			resp.Error(w, "failed to update subscription", http.StatusInternalServerError)
+		log.Error("failed to update user subscription", sl.Err(err))
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
 		}
+		resp.Error(w, "failed to update user subscription", http.StatusInternalServerError)
 		return
 	}
 

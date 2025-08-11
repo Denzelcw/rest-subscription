@@ -14,13 +14,8 @@ FROM alpine:3.20
 
 WORKDIR /app
 
-ENV CONFIG_PATH=./configs/env.yaml
-
 COPY --from=builder /migrator /migrator
 COPY --from=builder /subscriptions /subscriptions
 COPY --from=builder /app/docs ./docs
-COPY --from=builder /app/configs ./configs
 COPY --from=builder /app/migrations ./migrations
-
-ENTRYPOINT []
-CMD ["/subscriptions"]
+COPY .env .env

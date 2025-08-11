@@ -2,12 +2,11 @@ package handler
 
 import (
 	"context"
-	"errors"
 	"log/slog"
 	"net/http"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"
@@ -16,6 +15,7 @@ import (
 // GetListUserSubscriptionHandler godoc
 // @Summary      Get list of user subscriptions
 // @Description  Returns a list of a user's subscriptions by their UUID
+// @Tags Subscription
 // @Accept       json
 // @Produce      json
 // @Param        user_id query     string true "User UUID"
@@ -52,11 +52,11 @@ func (h *UserSubscriptionHandler) GetListUserSubscriptionHandler(w http.Response
 	subs, err := h.service.GetListByUUID(ctx, userId)
 	if err != nil {
 		log.Error("failed to get user subscriptions", sl.Err(err))
-		if errors.Is(err, storage.ErrUserNotFound) {
-			resp.Error(w, "user not found", http.StatusNotFound)
-		} else {
-			resp.Error(w, "failed to get user subscriptions list", http.StatusInternalServerError)
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
 		}
+		resp.Error(w, "failed to get user subscriptions", http.StatusBadRequest)
 		return
 	}
 

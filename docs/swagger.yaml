@@ -137,6 +137,8 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Get list of user subscriptions
+      tags:
+      - Subscription
     post:
       consumes:
       - application/json
@@ -160,7 +162,7 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
         "409":
-          description: User subscription already exists
+          description: User subscription conflicts with existing record
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
         "500":
@@ -168,6 +170,8 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Add user subscription
+      tags:
+      - Subscription
   /subscriptions/{id}:
     delete:
       description: Deletes a user subscription by ID
@@ -195,6 +199,8 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Delete user subscription
+      tags:
+      - Subscription
     get:
       description: Returns information about a user's subscription by its ID
       parameters:
@@ -221,6 +227,8 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Get user subscription
+      tags:
+      - Subscription
     put:
       consumes:
       - application/json
@@ -253,6 +261,8 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Update user subscription
+      tags:
+      - Subscription
   /subscriptions/total_cost:
     get:
       consumes:
@@ -282,4 +292,6 @@ paths:
           schema:
             $ref: '#/definitions/resp.ErrorResponse'
       summary: Get total user subscription cost
+      tags:
+      - Total Cost
 swagger: "2.0"

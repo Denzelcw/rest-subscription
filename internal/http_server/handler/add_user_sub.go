@@ -8,10 +8,10 @@ import (
 	"log/slog"
 	"net/http"
 	"task_manager/internal/http_server/dto"
+	"task_manager/internal/lib/api/er"
 	"task_manager/internal/lib/api/resp"
 	valid "task_manager/internal/lib/api/valid"
 	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
@@ -25,12 +25,13 @@ type CreateResponse struct {
 // AddUserSubscriptionHandler godoc
 // @Summary Add user subscription
 // @Description Adding user subscription to the database.
+// @Tags Subscription
 // @Accept json
 // @Produce json
 // @Param request body dto.CreateUserSubDTO true "Data for creating a user subscription"
 // @Success 201 {object} CreateResponse "Subscription created successfully"
 // @Failure 400 {object} resp.ErrorResponse "Invalid request"
-// @Failure 409 {object} resp.ErrorResponse "User subscription already exists"
+// @Failure 409 {object} resp.ErrorResponse "User subscription conflicts with existing record"
 // @Failure 500 {object} resp.ErrorResponse "Server error"
 // @Router /subscriptions [post]
 func (h *UserSubscriptionHandler) AddUserSubscriptionHandler(w http.ResponseWriter, r *http.Request) {
@@ -66,19 +67,19 @@ func (h *UserSubscriptionHandler) AddUserSubscriptionHandler(w http.ResponseWrit
 		var validateErr validator.ValidationErrors
 		errors.As(err, &validateErr)
 		log.Error("invalid request", sl.Err(err))
-
 		resp.Error(w, fmt.Sprintf("invalid request: %s", valid.ValidationError(validateErr, req)), http.StatusBadRequest)
 		return
 	}
 
 	id, err := h.service.Add(ctx, req)
 	if err != nil {
-		log.Info("user subscription already exists")
-		if errors.Is(err, storage.ErrUserSubExists) {
-			resp.Error(w, "user subscription already exists", http.StatusConflict)
-		} else {
-			resp.Error(w, "failed to add user subscription", http.StatusInternalServerError)
+		log.Error("failed to get user subscription")
+		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			resp.Error(w, msg, code)
+			return
 		}
+
+		resp.Error(w, "failed to get user subscription", http.StatusInternalServerError)
 		return
 	}
 

@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"task_manager/internal/config"
+	"subscription/internal/config"
 
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"

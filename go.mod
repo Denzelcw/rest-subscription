@@ -1,4 +1,4 @@
-module task_manager
+module subscription
 
 go 1.24
 

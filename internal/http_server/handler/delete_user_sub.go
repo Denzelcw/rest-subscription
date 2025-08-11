@@ -5,9 +5,9 @@ import (
 	"log/slog"
 	"net/http"
 	"strconv"
-	"task_manager/internal/lib/api/er"
-	"task_manager/internal/lib/api/resp"
-	"task_manager/internal/lib/logger/sl"
+	"subscription/internal/lib/api/er"
+	"subscription/internal/lib/api/resp"
+	"subscription/internal/lib/logger/sl"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
@@ -55,7 +55,6 @@ func (h *UserSubscriptionHandler) DeleteUserSubscriptionHandler(w http.ResponseW
 			resp.Error(w, msg, code)
 			return
 		}
-
 		resp.Error(w, "failed to delete user subscription", http.StatusInternalServerError)
 		return
 	}

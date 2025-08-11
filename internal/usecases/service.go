@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
-	"task_manager/internal/domain"
-	"task_manager/internal/http_server/dto"
-	"task_manager/internal/lib/logger/sl"
-	"task_manager/internal/storage/postgres"
+	"subscription/internal/domain"
+	"subscription/internal/http_server/dto"
+	"subscription/internal/lib/logger/sl"
+	"subscription/internal/storage/postgres"
 
 	"github.com/google/uuid"
 )

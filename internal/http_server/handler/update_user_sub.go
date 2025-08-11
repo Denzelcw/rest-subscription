@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"task_manager/internal/http_server/dto"
-	"task_manager/internal/lib/api/er"
-	"task_manager/internal/lib/api/resp"
-	valid "task_manager/internal/lib/api/valid"
-	"task_manager/internal/lib/logger/sl"
+	"subscription/internal/http_server/dto"
+	"subscription/internal/lib/api/er"
+	"subscription/internal/lib/api/resp"
+	valid "subscription/internal/lib/api/valid"
+	"subscription/internal/lib/logger/sl"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/go-playground/validator/v10"
@@ -71,6 +71,7 @@ func (h *UserSubscriptionHandler) UpdateSubscriptionHandler(w http.ResponseWrite
 	if err != nil {
 		log.Error("failed to update user subscription", sl.Err(err))
 		if msg, code, ok := er.MapErrorToStatus(err); ok {
+			fmt.Println(msg)
 			resp.Error(w, msg, code)
 			return
 		}

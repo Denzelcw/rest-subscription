@@ -3,9 +3,9 @@ package handler
 import (
 	"context"
 	"log/slog"
-	"task_manager/internal/domain"
-	"task_manager/internal/http_server/dto"
-	"task_manager/internal/usecases"
+	"subscription/internal/domain"
+	"subscription/internal/http_server/dto"
+	"subscription/internal/usecases"
 	"time"
 
 	"github.com/google/uuid"

@@ -4,10 +4,10 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	_ "subscription/docs"
+	"subscription/internal/app/rest"
+	"subscription/internal/config"
 	"syscall"
-	_ "task_manager/docs"
-	"task_manager/internal/app/rest"
-	"task_manager/internal/config"
 )
 
 // @title           User Subscription REST API Server

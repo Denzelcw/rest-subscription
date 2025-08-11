@@ -4,9 +4,9 @@ import (
 	"context"
 	"log/slog"
 	"net/http"
-	"task_manager/internal/lib/api/er"
-	"task_manager/internal/lib/api/resp"
-	"task_manager/internal/lib/logger/sl"
+	"subscription/internal/lib/api/er"
+	"subscription/internal/lib/api/resp"
+	"subscription/internal/lib/logger/sl"
 
 	"github.com/go-chi/chi/v5/middleware"
 	"github.com/google/uuid"

@@ -8,7 +8,7 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    container_name: task_server_migrate
+    container_name: subscriptions_migrate
     command: ["/migrator"]
     network_mode: host
     working_dir: /app
@@ -21,7 +21,7 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    container_name: task_server_server
+    container_name: subscriptions_server
     command: ["/subscriptions"]
     network_mode: host
     working_dir: /app
